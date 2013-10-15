@@ -10,6 +10,7 @@ import sys
 import pickle as pkl
 import numpy as np
 from numpy import sqrt, arccos, rad2deg
+from faceDetection import faceDetection as fd
 import argparse as ap
 
 class HandTracker(object):
@@ -75,12 +76,18 @@ class HandTracker(object):
 			sys.exit(1)
 		cv2.waitKey(200)	# Wait for camera (Apple iSight bug?)
 	
+		# Initialize face detection thread
+		self.fd_thread = fd(self)
+
 		# Start app
-		self.main()		
+		self.main()
 
 	############################################
 	# Main function
 	def main(self):
+
+		# Start face detection thread
+		self.fd_thread.start()
 
 		# Main loop
 		run = True
@@ -148,7 +155,11 @@ class HandTracker(object):
 			elif (keyPressed == 32):
 				self.im_background = np.copy(self.im_orig)
 
+		# Stop face capture thread
+		self.fd_thread.stop()
+		# Destroy windows
 		cv2.destroyAllWindows()
+		# Release video capture
 		self.capture.release()
 		self.save()
 
@@ -200,7 +211,7 @@ class HandTracker(object):
 			cb_img = self.thresholding(channels[2], self.th_CB_min, self.th_CB_max)
 
 			# Define kernel for morophology edit
-			kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+			kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (17, 17))
 
 			# Dilate & erode each layer
 			y_img = cv2.erode(cv2.dilate(y_img, kernel), kernel)
@@ -211,7 +222,7 @@ class HandTracker(object):
 			sum = cv2.add(y_img, cr_img, cb_img)
 
 			# Define new kernel for morphology edit
-			kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10, 10))
+			#kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (17, 17))
 
 			# Dilate & erode	
 			sum = cv2.erode(cv2.dilate(sum, kernel), kernel)
