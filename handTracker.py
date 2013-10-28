@@ -10,7 +10,7 @@ import sys
 import pickle as pkl
 import numpy as np
 from numpy import sqrt, arccos, rad2deg
-from faceDetection import faceDetection as fd
+from faceDetection import FaceDetection as fd
 import argparse as ap
 
 class HandTracker(object):
@@ -26,6 +26,8 @@ class HandTracker(object):
 
 		# Initialisation
 		self.im_background = None
+		self.im_thread = np.zeros((60,60),np.uint8)
+		self.im_face = np.zeros((60,60),np.uint8)
 
 		# Parse arguments
 		parser = ap.ArgumentParser(description='Hand tracking with OpenCV and Python')
@@ -120,6 +122,13 @@ class HandTracker(object):
 				new_width = self.IMAGE_WIDTH
 				new_height = size[0] / (size[1] / new_width)
 				self.im_orig = cv2.resize(self.im_orig, (new_width, new_height))
+				self.im_face = cv2.resize(self.im_face, (new_width, new_height))
+
+			# Copy for face detetction
+			try:
+				self.im_thread = self.im_orig.copy()
+			except Exception as detail:
+				print "ERROR: image copy error (", detail, ")"
 
 			# if Background is not set, set it
 			if self.im_background == None:
@@ -128,10 +137,17 @@ class HandTracker(object):
 			self.im_output = np.copy(self.im_orig)
 
 			# Background removal
-			self.skin = self.backgroundRemoval(self.im_orig, self.im_background)
+			#self.skin = self.backgroundRemoval(self.im_orig, self.im_background)
 
 			# Skin extraction
-			#self.skin = self.skinExtraction(self.im_orig)
+			self.skin = self.skinExtraction(self.im_orig)
+
+			# Face removal
+			self.skin = cv2.add(self.skin, self.im_face)
+
+			# bitwise inversion
+			self.skin = cv2.bitwise_not(self.skin)
+
 			# Contours detection
 			contours = cv2.findContours(self.skin, cv2.RETR_LIST, cv2.CHAIN_APPROX_NONE)[0]
 
@@ -161,7 +177,7 @@ class HandTracker(object):
 		cv2.destroyAllWindows()
 		# Release video capture
 		self.capture.release()
-		self.save()
+		#self.save()
 
 
 	############################################
@@ -244,18 +260,25 @@ class HandTracker(object):
 	# Skin Extraction
 	def skinExtraction(self, image):
 		try:
-			im_blur = cv2.blur(image, (self.blur, self.blur))
 			# Convert to YCrCb
-			im_YCrCb = cv2.cvtColor(im_blur, cv2.COLOR_BGR2YCR_CB)
+			im_YCrCb = cv2.cvtColor(image, cv2.COLOR_BGR2YCR_CB)
 
-			# Extract skin values
-			skin = cv2.inRange(im_YCrCb,
-				(self.th_Y_min, self.th_CR_min, self.th_CB_min),
-				(self.th_Y_max, self.th_CR_max, self.th_CB_max))
-			
+			# Split channels
+			channels = cv2.split(im_YCrCb)
+
+			# Threshold
+			y_img = self.thresholding(channels[0], self.th_Y_min, self.th_Y_max)
+			cr_img = self.thresholding(channels[1], self.th_CR_min, self.th_CR_max)
+			cb_img = self.thresholding(channels[2], self.th_CB_min, self.th_CB_max)
+
+			# Assemble
+			skin = cv2.add(cr_img, cb_img)
+
+			# Blur
+			#skin = cv2.blur(skin, (self.blur, self.blur))
+
 			if self.debugType == 'mask':
-				pass
-				#cv2.imshow('debug', skin)
+				cv2.imshow('debug', skin)
 				#cv2.moveWindow('debug', 900, 50)
 		except Exception as detail:
 			print "ERROR: Skin extraction (", detail, ")"

@@ -11,7 +11,7 @@ class FaceDetection(threading.Thread):
 		while not self._stopevent.isSet():
 			#try/catch
 			try:
-				faceDetect = np.copy(self.parent.thread)
+				faceDetect = np.copy(self.parent.im_thread)
 				mask = np.zeros(faceDetect.shape,np.uint8)
 				cascade = cv2.CascadeClassifier("haar/haarcascade_frontalface_alt.xml")
 
@@ -21,11 +21,11 @@ class FaceDetection(threading.Thread):
 				mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)		
 				#val, mask = cv2.threshold(faceDetect, 245, 255, cv2.THRESH_BINARY_INV)
 				#faceDetect = cv2.add(faceDetect,np.zeros(faceDetect.shape,np.uint8),mask = mask)
-				self.parent.faceD = mask
-			except:
-				print "boaf"
-			if self.parent.debug and self.parent.debugFace:
-				cv2.imshow('FaceDetect',cv2.bitwise_not(mask))
+				self.parent.im_face = mask
+				if self.parent.debugType == 'face':
+					cv2.imshow('face detection',cv2.bitwise_not(mask))
+			except Exception as detail:
+				print "ERROR: face detection (", ")"
 			
 		print "le thread "+self.nom +" s'est termine proprement"
 	def stop(self):
