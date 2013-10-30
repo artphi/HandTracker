@@ -143,8 +143,10 @@ class HandTracker(object):
 			self.skin = self.skinExtraction(self.im_orig)
 
 			# Face removal
-			self.skin = cv2.add(self.skin, self.im_face)
-
+			try:
+				self.skin = cv2.add(self.skin, self.im_face)
+			except:
+				pass
 			# bitwise inversion
 			self.skin = cv2.bitwise_not(self.skin)
 
@@ -161,7 +163,7 @@ class HandTracker(object):
 
 			cv2.putText(self.im_output, "fingers = " + `nbFingers`, (10, 20), cv2.FONT_HERSHEY_PLAIN, 1, [255, 255, 255])
 			cv2.imshow('output', np.concatenate((self.im_orig, self.im_output), 1))
-			cv2.moveWindow('output', 50, 500)
+			#cv2.moveWindow('output', 50, 500)
 
 			keyPressed = cv2.waitKey(3)
 			# q > quit
