@@ -167,7 +167,7 @@ class HandTracker(object):
 
 			keyPressed = cv2.waitKey(3)
 			# q > quit
-			if (keyPressed == 113):
+			if (keyPressed == 113 or keyPressed == ord('q')):
 				run = False
 			# space > new background
 			elif (keyPressed == 32):
