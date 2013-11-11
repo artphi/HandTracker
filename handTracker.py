@@ -225,7 +225,16 @@ class HandTracker(object):
 		cv2.destroyAllWindows()
 		# Release video capture
 		self.capture.release()
-		#self.save()
+		save = 0
+		while save != 'y' and save != 'n':
+			print ("Do you want to save? (y/n)")
+			save = raw_input("> ")
+			if save == 'y':
+				self.save()
+				run = False
+			elif save == 'n':
+				run = False
+		
 
 
 	############################################
