@@ -26,7 +26,5 @@ class FaceDetection(threading.Thread):
 					cv2.imshow('face detection',cv2.bitwise_not(mask))
 			except Exception as detail:
 				print "ERROR: face detection (", ")"
-			
-		print "le thread "+self.nom +" s'est termine proprement"
 	def stop(self):
 		self._stopevent.set()
