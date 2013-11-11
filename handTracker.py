@@ -49,8 +49,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 
 -----------------------------------------------------------------------------""" 
-
-
 import cv2
 import sys
 import pickle as pkl
@@ -211,12 +209,14 @@ class HandTracker(object):
 			cv2.imshow('output', np.concatenate((self.im_orig, self.im_output), 1))
 			#cv2.moveWindow('output', 50, 500)
 
-			keyPressed = cv2.waitKey(3)
+			keyPressed = cv2.waitKey(10)
+
 			# q > quit
-			if (keyPressed == 113 or keyPressed == ord('q')):
+			if (keyPressed & 0xFF == ord('q')):
+				
 				run = False
 			# space > new background
-			elif (keyPressed == 32):
+			elif (keyPressed & 0xFF == 32 ):
 				self.im_background = np.copy(self.im_orig)
 
 		# Stop face capture thread
